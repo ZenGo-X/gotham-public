@@ -1,7 +1,8 @@
-use crate::public_gotham::{Config, PublicGotham,DB};
+use crate::public_gotham::{Config, PublicGotham, DB};
 use rocket::{self, catch, routes, Build, Request, Rocket};
 use std::collections::HashMap;
 use tokio::sync::Mutex;
+
 #[catch(500)]
 fn internal_error() -> &'static str {
     "Internal server error"
@@ -24,7 +25,15 @@ pub fn get_server(settings: HashMap<String, String>) -> Rocket<Build> {
     };
     let x = PublicGotham::new();
     rocket::Rocket::build()
-        .mount("/", routes![gotham_engine::traits::wrap_keygen_first])
+        .mount(
+            "/",
+            routes![
+                gotham_engine::traits::wrap_keygen_first,
+                gotham_engine::traits::wrap_keygen_second,
+                gotham_engine::traits::wrap_keygen_third,
+                gotham_engine::traits::wrap_keygen_fourth,
+            ],
+        )
         .manage(Mutex::new(Box::new(x) as Box<dyn gotham_engine::traits::Db>))
         .manage(db_config)
 }

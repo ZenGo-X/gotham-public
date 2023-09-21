@@ -3,13 +3,12 @@ mod tests {
     use std::collections::HashMap;
     use std::env;
     use std::time::Instant;
+    use floating_duration::TimeFormat;
     use crate::server;
-    use rocket::{http::ContentType, http::{Header, Status}, local::blocking::Client};
+    use rocket::{http::ContentType, http::{ Status}, local::blocking::Client};
     use two_party_ecdsa::curv::arithmetic::traits::Converter;
-    use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::*;
-    use two_party_ecdsa::{party_one, party_two, curv::BigInt};
-    use kms::chain_code::two_party as chain_code;
-    use kms::ecdsa::two_party::{MasterKey2, party1};
+    use two_party_ecdsa::{party_one};
+    use two_party_ecdsa::kms::ecdsa::two_party::{MasterKey2, party1};
 
     fn key_gen(client: &Client) -> String {
         let response = client
@@ -23,7 +22,6 @@ mod tests {
         let (id, kg_party_one_first_message): (String, party_one::KeyGenFirstMsg) =
             serde_json::from_str(&res_body).unwrap();
 
-        let start = Instant::now();
 
         let (kg_party_two_first_message, kg_ec_key_pair_party2) = MasterKey2::key_gen_first_message();
 
@@ -31,6 +29,78 @@ mod tests {
 
         /*************** START: SECOND MESSAGE ***************/
         let body = serde_json::to_string(&kg_party_two_first_message.d_log_proof).unwrap();
+        let response = client
+            .post(format!("/engine/traits/{}/wrap_keygen_second", id))
+            .body(body)
+            .header(ContentType::JSON)
+            .dispatch();
+        assert_eq!(response.status(), Status::Ok);
+
+        let res_body = response.into_string().unwrap();
+        let kg_party_one_second_message: party1::KeyGenParty1Message2 =
+            serde_json::from_str(&res_body).unwrap();
+
+
+        let key_gen_second_message = MasterKey2::key_gen_second_message(
+            &kg_party_one_first_message,
+            &kg_party_one_second_message,
+        );
+        assert!(key_gen_second_message.is_ok());
+
+
+        let (party_two_second_message, party_two_paillier, party_two_pdl_chal) =
+            key_gen_second_message.unwrap();
+
+        /*************** END: SECOND MESSAGE ***************/
+
+        /*************** START: THIRD MESSAGE ***************/
+        let body = serde_json::to_string(&party_two_second_message.pdl_first_message).unwrap();
+
+        let response = client
+            .post(format!("/engine/traits/{}/wrap_keygen_third", id))
+            .body(body)
+            .header(ContentType::JSON)
+            .dispatch();
+        assert_eq!(response.status(), Status::Ok);
+
+        let res_body = response.into_string().unwrap();
+        let party_one_third_message: party_one::PDLFirstMessage =
+            serde_json::from_str(&res_body).unwrap();
+
+        let start = Instant::now();
+
+        let pdl_decom_party2 = MasterKey2::key_gen_third_message(&party_two_pdl_chal);
+
+        /*************** END: THIRD MESSAGE ***************/
+
+        /*************** START: FOURTH MESSAGE ***************/
+
+        let party_2_pdl_second_message = pdl_decom_party2;
+        let request = party_2_pdl_second_message;
+        let body = serde_json::to_string(&request).unwrap();
+
+
+        let response = client
+            .post(format!("/engine/traits/{}/wrap_keygen_fourth", id))
+            .body(body)
+            .header(ContentType::JSON)
+            .dispatch();
+        assert_eq!(response.status(), Status::Ok);
+
+
+
+        let res_body = response.into_string().unwrap();
+        let party_one_pdl_second_message: party_one::PDLSecondMessage =
+            serde_json::from_str(&res_body).unwrap();
+
+        let start = Instant::now();
+
+        MasterKey2::key_gen_fourth_message(
+            &party_two_pdl_chal,
+            &party_one_third_message,
+            &party_one_pdl_second_message,
+        )
+            .expect("pdl error party1");
 
         id
     }
