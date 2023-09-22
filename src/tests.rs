@@ -8,9 +8,11 @@ mod tests {
     use rocket::{http::ContentType, http::{ Status}, local::blocking::Client};
     use two_party_ecdsa::curv::arithmetic::traits::Converter;
     use two_party_ecdsa::{party_one};
+    use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{Party1FirstMessage, Party1SecondMessage};
     use two_party_ecdsa::kms::ecdsa::two_party::{MasterKey2, party1};
+    use two_party_ecdsa::kms::chain_code::two_party::party2::ChainCode2;
 
-    fn key_gen(client: &Client) -> String {
+    fn key_gen(client: &Client) -> (String, MasterKey2) {
         let response = client
             .post("/engine/traits/wrap_keygen_first")
             .header(ContentType::JSON)
@@ -93,7 +95,6 @@ mod tests {
         let party_one_pdl_second_message: party_one::PDLSecondMessage =
             serde_json::from_str(&res_body).unwrap();
 
-        let start = Instant::now();
 
         MasterKey2::key_gen_fourth_message(
             &party_two_pdl_chal,
@@ -102,7 +103,70 @@ mod tests {
         )
             .expect("pdl error party1");
 
-        id
+        /*************** START: CHAINCODE FIRST MESSAGE ***************/
+
+        let response = client
+            .post(format!("/engine/traits/{}/chaincode/first", id))
+            .header(ContentType::JSON)
+            .dispatch();
+        assert_eq!(response.status(), Status::Ok);
+
+
+        let res_body = response.into_string().unwrap();
+        let cc_party_one_first_message: Party1FirstMessage = serde_json::from_str(&res_body).unwrap();
+
+        let (cc_party_two_first_message, cc_ec_key_pair2) =
+            ChainCode2::chain_code_first_message();
+
+
+        /*************** END: CHAINCODE FIRST MESSAGE ***************/
+
+        /*************** START: CHAINCODE SECOND MESSAGE ***************/
+        let body = serde_json::to_string(&cc_party_two_first_message.d_log_proof).unwrap();
+
+
+        let response = client
+            .post(format!("/engine/traits/{}/chaincode/second", id))
+            .body(body)
+            .header(ContentType::JSON)
+            .dispatch();
+        assert_eq!(response.status(), Status::Ok);
+
+        let res_body = response.into_string().unwrap();
+        let cc_party_one_second_message: Party1SecondMessage = serde_json::from_str(&res_body).unwrap();
+
+        let _cc_party_two_second_message = ChainCode2::chain_code_second_message(
+            &cc_party_one_first_message,
+            &cc_party_one_second_message,
+        );
+
+
+        /*************** END: CHAINCODE SECOND MESSAGE ***************/
+
+        let party2_cc = ChainCode2::compute_chain_code(
+            &cc_ec_key_pair2,
+            &cc_party_one_second_message.comm_witness.public_share,
+        )
+            .chain_code;
+
+
+        /*************** END: CHAINCODE COMPUTE MESSAGE ***************/
+
+
+
+        let party_two_master_key = MasterKey2::set_master_key(
+            &party2_cc,
+            &kg_ec_key_pair_party2,
+            &kg_party_one_second_message
+                .ecdh_second_message
+                .comm_witness
+                .public_share,
+            &party_two_paillier,
+        );
+
+        /*************** END: MASTER KEYS MESSAGE ***************/
+
+        (id, party_two_master_key)
     }
 
     #[test]

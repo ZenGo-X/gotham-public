@@ -1,4 +1,5 @@
 //!Public gotham implementation
+use std::any::{Any, TypeId};
 use gotham_engine::traits::*;
 use gotham_engine::types::*;
 use rocket::async_trait;
@@ -57,7 +58,7 @@ impl PublicGotham {
 
 impl KeyGen for PublicGotham {}
 
-impl<S: Db> Sign<S> for PublicGotham {}
+impl Sign for PublicGotham {}
 
 fn idify(user_id: String, id: String, name: &dyn MPCStruct) -> String {
     format!("{}_{}_{}", user_id, id, name.to_string())
@@ -74,14 +75,12 @@ impl Db for PublicGotham {
         let identifier = idify(key.clone().customer_id, key.clone().id, table_name);
         // let val_json = serde_json::to_string(value);
         let v_string = serde_json::to_string(&value).unwrap();
-        println!("Insest to RocksDB : {:?}", v_string.clone());
-
+        println!("Insert to RocksDB : {:?}", v_string.clone());
 
         // let mut prefix: String = "{".to_owned();
         // let preformat = &v_string[v_string.find(':').unwrap()..v_string.len()-1];
         // let format = prefix+&preformat[2..preformat.len()];
         // // let final = format.clone()[..format.clone().len()-1];
-
 
         self.rocksdb_client.put(identifier, v_string.clone());
         Ok(())
