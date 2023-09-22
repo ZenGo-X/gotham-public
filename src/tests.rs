@@ -11,7 +11,7 @@ mod tests {
     use two_party_ecdsa::kms::ecdsa::two_party::{MasterKey2, party1};
     use two_party_ecdsa::kms::chain_code::two_party::party2::ChainCode2;
     use two_party_ecdsa::kms::ecdsa;
-    use gotham_engine::sign::SignSecondMsgRequest;
+    use gotham_engine::types::SignSecondMsgRequest;
     use two_party_ecdsa::party_one::Converter;
 
     fn key_gen(client: &Client) -> (String, MasterKey2) {
@@ -20,7 +20,6 @@ mod tests {
             .header(ContentType::JSON)
             .dispatch();
         assert_eq!(response.status(), Status::Ok);
-        println!("TEST PUBLIC");
         let res_body = response.into_string().unwrap();
 
         let (id, kg_party_one_first_message): (String, party_one::KeyGenFirstMsg) =

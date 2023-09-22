@@ -37,7 +37,12 @@ gotham-engine = { git = "https://github.com/ZenGo-X/gotham-engine.git" }
 [dev-dependencies]
 criterion = "0.4.0"
 pprof = { version = "0.11", features = ["flamegraph", "frame-pointer", "criterion"] }
+rand = "0.8"
 
 [[bench]]
 name = "keygen_bench"
+harness = false
+
+[[bench]]
+name = "sign_bench"
 harness = false

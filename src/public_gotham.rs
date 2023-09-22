@@ -1,12 +1,16 @@
 //!Public gotham implementation
-use gotham_engine::traits::*;
-use gotham_engine::types::*;
+
 use rocket::async_trait;
 use std::collections::HashMap;
-use two_party_ecdsa::party_one::Value;
-use gotham_engine::types::DatabaseError;
 use std::string::String;
+
+use two_party_ecdsa::party_one::Value;
+
 use gotham_engine::keygen::KeyGen;
+use gotham_engine::sign::Sign;
+use gotham_engine::traits::*;
+use gotham_engine::types::*;
+
 
 pub struct PublicGotham {
     db_type: DbConnector,

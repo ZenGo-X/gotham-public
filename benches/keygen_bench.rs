@@ -11,6 +11,8 @@ use two_party_ecdsa::kms::chain_code::two_party::party2::ChainCode2;
 use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
 use pprof::criterion::{Output, PProfProfiler};
 use public_server_lib::server::*;
+mod keygen_bench;
+
 fn key_gen(client: &Client) -> (String, MasterKey2) {
     let response = client
         .post("/ecdsa/keygen/wrap_keygen_first")
