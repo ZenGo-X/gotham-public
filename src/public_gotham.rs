@@ -9,6 +9,7 @@ use log::debug;
 use two_party_ecdsa::party_one::Value;
 use gotham_engine::types::DatabaseError;
 use std::string::String;
+use gotham_engine::keygen::KeyGen;
 
 pub struct PublicGotham {
     db_type: DbConnector,
