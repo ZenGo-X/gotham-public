@@ -1,11 +1,8 @@
 //!Public gotham implementation
-use std::any::{Any, TypeId};
 use gotham_engine::traits::*;
 use gotham_engine::types::*;
 use rocket::async_trait;
 use std::collections::HashMap;
-use std::fmt::Error;
-use log::debug;
 use two_party_ecdsa::party_one::Value;
 use gotham_engine::types::DatabaseError;
 use std::string::String;
@@ -76,14 +73,14 @@ impl Db for PublicGotham {
         let identifier = idify(key.clone().customer_id, key.clone().id, table_name);
         // let val_json = serde_json::to_string(value);
         let v_string = serde_json::to_string(&value).unwrap();
-        println!("Insert to RocksDB : {:?}", v_string.clone());
+        // println!("Insert to RocksDB : {:?}", v_string.clone());
 
         // let mut prefix: String = "{".to_owned();
         // let preformat = &v_string[v_string.find(':').unwrap()..v_string.len()-1];
         // let format = prefix+&preformat[2..preformat.len()];
         // // let final = format.clone()[..format.clone().len()-1];
 
-        self.rocksdb_client.put(identifier, v_string.clone());
+        let _ = self.rocksdb_client.put(identifier, v_string.clone());
         Ok(())
     }
 
@@ -93,7 +90,7 @@ impl Db for PublicGotham {
         table_name: &dyn MPCStruct,
     ) -> Result<Option<Box<dyn Value>>, DatabaseError> {
         let identifier = idify(key.clone().customer_id, key.clone().id, table_name);
-        debug!("Getting from db ({})", identifier);
+        // debug!("Getting from db ({})", identifier);
         let result = self.rocksdb_client.get(identifier.clone()).unwrap();
         let vec_option: Option<Vec<u8>> = result.map(|v| v.to_vec());
         match vec_option {
@@ -101,7 +98,7 @@ impl Db for PublicGotham {
 
                 // let mut prefix:String = "{\"".to_owned();
                 let val: String = String::from_utf8(vec.clone()).unwrap();
-                println!("result from get = {:?}", val.clone());
+                // println!("result from get = {:?}", val.clone());
 
                 // let preformat = &val[val.find(',').unwrap()..];
                 //

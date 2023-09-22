@@ -28,13 +28,14 @@ pub fn get_server(settings: HashMap<String, String>) -> Rocket<Build> {
         .mount(
             "/",
             routes![
-                gotham_engine::traits::wrap_keygen_first,
-                gotham_engine::traits::wrap_keygen_second,
-                gotham_engine::traits::wrap_keygen_third,
-                gotham_engine::traits::wrap_keygen_fourth,
-                gotham_engine::traits::wrap_chain_code_first_message,
-                gotham_engine::traits::wrap_chain_code_second_message,
-
+                gotham_engine::routes::wrap_keygen_first,
+                gotham_engine::routes::wrap_keygen_second,
+                gotham_engine::routes::wrap_keygen_third,
+                gotham_engine::routes::wrap_keygen_fourth,
+                gotham_engine::routes::wrap_chain_code_first_message,
+                gotham_engine::routes::wrap_chain_code_second_message,
+                gotham_engine::routes::wrap_sign_first,
+                gotham_engine::routes::wrap_sign_second,
             ],
         )
         .manage(Mutex::new(Box::new(x) as Box<dyn gotham_engine::traits::Db>))

@@ -33,3 +33,11 @@ jsonwebtoken = "8"
 hex = "0.4"
 two-party-ecdsa = { git = "https://github.com/ZenGo-X/two-party-ecdsa.git", branch="compatibility_gotham_engine" }
 gotham-engine = { git = "https://github.com/ZenGo-X/gotham-engine.git" }
+
+[dev-dependencies]
+criterion = "0.4.0"
+pprof = { version = "0.11", features = ["flamegraph", "frame-pointer", "criterion"] }
+
+[[bench]]
+name = "keygen_bench"
+harness = false
