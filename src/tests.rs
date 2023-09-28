@@ -16,7 +16,7 @@ mod tests {
 
     fn key_gen(client: &Client) -> (String, MasterKey2) {
         let response = client
-            .post("/ecdsa/keygen/wrap_keygen_first")
+            .post("/ecdsa/keygen/first")
             .header(ContentType::JSON)
             .dispatch();
         assert_eq!(response.status(), Status::Ok);
@@ -33,7 +33,7 @@ mod tests {
         /*************** START: SECOND MESSAGE ***************/
         let body = serde_json::to_string(&kg_party_two_first_message.d_log_proof).unwrap();
         let response = client
-            .post(format!("/ecdsa/keygen/{}/wrap_keygen_second", id))
+            .post(format!("/ecdsa/keygen/{}/second", id))
             .body(body)
             .header(ContentType::JSON)
             .dispatch();
@@ -60,7 +60,7 @@ mod tests {
         let body = serde_json::to_string(&party_two_second_message.pdl_first_message).unwrap();
 
         let response = client
-            .post(format!("/ecdsa/keygen/{}/wrap_keygen_third", id))
+            .post(format!("/ecdsa/keygen/{}/third", id))
             .body(body)
             .header(ContentType::JSON)
             .dispatch();
@@ -84,7 +84,7 @@ mod tests {
 
 
         let response = client
-            .post(format!("/ecdsa/keygen/{}/wrap_keygen_fourth", id))
+            .post(format!("/ecdsa/keygen/{}/fourth", id))
             .body(body)
             .header(ContentType::JSON)
             .dispatch();

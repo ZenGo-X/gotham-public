@@ -1,5 +1,5 @@
 use crate::public_gotham::{Config, PublicGotham, DB};
-use rocket::{self, catch, routes, Build, Request, Rocket};
+use rocket::{self, catch, routes, Build, Request, Rocket, catchers};
 use std::collections::HashMap;
 use tokio::sync::Mutex;
 
@@ -19,12 +19,14 @@ fn not_found(req: &Request) -> String {
 }
 
 pub fn get_server(settings: HashMap<String, String>) -> Rocket<Build> {
+
     // let settings = get_settings_as_map();
     let db_config = Config {
         db: get_db(settings.clone()),
     };
     let x = PublicGotham::new();
     rocket::Rocket::build()
+        .register("/", catchers![internal_error, not_found, bad_request])
         .mount(
             "/",
             routes![

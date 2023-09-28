@@ -1,9 +1,6 @@
 use std::collections::HashMap;
-use std::env;
 use std::time::Instant;
-use floating_duration::TimeFormat;
 use rocket::{http::ContentType, http::{ Status}, local::blocking::Client};
-use two_party_ecdsa::curv::arithmetic::routes::Converter;
 use two_party_ecdsa::{party_one};
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{Party1FirstMessage, Party1SecondMessage};
 use two_party_ecdsa::kms::ecdsa::two_party::{MasterKey2, party1};
@@ -11,7 +8,6 @@ use two_party_ecdsa::kms::chain_code::two_party::party2::ChainCode2;
 use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
 use pprof::criterion::{Output, PProfProfiler};
 use public_server_lib::server::*;
-mod keygen_bench;
 
 fn key_gen(client: &Client) -> (String, MasterKey2) {
     let response = client
@@ -69,7 +65,6 @@ fn key_gen(client: &Client) -> (String, MasterKey2) {
     let party_one_third_message: party_one::PDLFirstMessage =
         serde_json::from_str(&res_body).unwrap();
 
-    let start = Instant::now();
 
     let pdl_decom_party2 = MasterKey2::key_gen_third_message(&party_two_pdl_chal);
 

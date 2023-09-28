@@ -13,8 +13,6 @@ use gotham_engine::types::*;
 
 
 pub struct PublicGotham {
-    db_type: DbConnector,
-    auth: Authenticator,
     rocksdb_client: rocksdb::DB,
 }
 
@@ -51,10 +49,14 @@ impl PublicGotham {
         let rocksdb_client = rocksdb::DB::open_default(format!("./{}", db_name)).unwrap();
 
         PublicGotham {
-            db_type: DbConnector::RocksDB,
-            auth: Authenticator::None,
             rocksdb_client,
         }
+    }
+}
+
+impl Default for PublicGotham {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -62,6 +64,7 @@ impl KeyGen for PublicGotham {}
 
 impl Sign for PublicGotham {}
 
+#[inline(always)]
 fn idify(user_id: String, id: String, name: &dyn MPCStruct) -> String {
     format!("{}_{}_{}", user_id, id, name.to_string())
 }
@@ -101,7 +104,7 @@ impl Db for PublicGotham {
             Some(vec) => {
 
                 // let mut prefix:String = "{\"".to_owned();
-                let val: String = String::from_utf8(vec.clone()).unwrap();
+                // let val: String = String::from_utf8(vec.clone()).unwrap();
                 // println!("result from get = {:?}", val.clone());
 
                 // let preformat = &val[val.find(',').unwrap()..];
@@ -116,7 +119,7 @@ impl Db for PublicGotham {
             None => Ok(None),
         }
     }
-    async fn has_active_share(&self, user_id: &str) -> Result<bool, String> {
+    async fn has_active_share(&self, _user_id: &str) -> Result<bool, String> {
         Ok(false)
     }
 }
